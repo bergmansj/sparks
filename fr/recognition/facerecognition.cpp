@@ -15,9 +15,12 @@ FaceRecognition::FaceRecognition(const QString &cascadeName,QObject *parent) :
     QObject(parent),
     face_detection(cascadeName),
     face_size(140,200),
-    train_image_path("./")
+    train_image_path("./traindata")
 {
     recognizer = new cognition::EigenfaceRecognizer();
+    if(!QDir(train_image_path).exists())
+        train_image_path.mkpath(train_image_path.path());
+
 }
 
 FaceRecognition::~FaceRecognition()

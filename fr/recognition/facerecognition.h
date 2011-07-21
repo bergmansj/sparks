@@ -33,6 +33,8 @@ signals:
     void recognizeFaceResult(const QImage&, const QString&);
     void recognizeFaceFailed(const QImage&);
 
+    void newStatus(const QString&);
+
 public slots:
     void labeledFace(const QImage&, const QString&);
     void recognizeFace(const QImage&);
