@@ -67,8 +67,10 @@ void MainWindow::labelFace(const QImage& face)
 void MainWindow::recognizeResult(const QImage& image, const QString& label)
 {
     // show image, label
-    ui->TextLabel_recognized->setPixmap(QPixmap::fromImage(image));
-    ui->TextLabel_label->setText(label);
+    //ui->TextLabel_recognized->setPixmap(QPixmap::fromImage(image));
+    //ui->TextLabel_label->setText(label);
+    emit newStatus("Added recognized image.");
+    recognized_images.append(image);
 }
 
 void MainWindow::on_Button_set_label_clicked()
@@ -93,7 +95,6 @@ void MainWindow::on_Button_set_label_clicked()
         ui->TextLabel_unlabeled->setPixmap(QPixmap::fromImage(unlabeled_images.first()));
     } else {
         ui->TextLabel_unlabeled->setText("empty");
-        fr.trainRecognizer();
     }
 }
 
@@ -101,4 +102,29 @@ void MainWindow::on_Button_set_label_clicked()
 void MainWindow::statusUpdate(const QString& status)
 {
     ui->label_status->setText(status);
+    std::cout << status.toStdString() << std::endl;
+}
+
+void MainWindow::on_pushButton_3_clicked()
+{
+    if(!(ui->TextLabel_label->text() == "empty")) {
+        recognized_images.removeFirst();
+    }
+
+    if(recognized_images.size() > 0) {
+        emit newStatus("Showing new recognized image.");
+        QImage image = recognized_images.first();
+        QString label = image.text("label");
+        ui->TextLabel_label->setText(label);
+        ui->TextLabel_recognized->setPixmap(QPixmap::fromImage(image));
+    } else {
+        ui->TextLabel_label->setText("empty");
+        ui->TextLabel_recognized->setText("empty");
+    }
+}
+
+
+void MainWindow::on_pushButton_4_clicked()
+{
+    fr.trainRecognizer();
 }

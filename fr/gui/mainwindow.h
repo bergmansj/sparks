@@ -36,12 +36,17 @@ private slots:
     void recognizeResult(const QImage&, const QString&);
     void statusUpdate(const QString&);
 
+    void on_pushButton_3_clicked();
+
+    void on_pushButton_4_clicked();
+
 private:
     Ui::MainWindow *ui;
 
     FaceRecognition fr;
 
     QList<QImage> unlabeled_images;
+    QList<QImage> recognized_images;
 };
 
 #endif // MAINWINDOW_H

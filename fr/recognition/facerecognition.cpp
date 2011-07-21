@@ -84,6 +84,7 @@ void FaceRecognition::labeledFace(const QImage& inputImage, const QString& label
 
 void FaceRecognition::trainRecognizer()
 {
+    emit newStatus("Training recognizer");
     QStringList files;
     QString filefilter = "*" + IMAGE_EXT;
     files = train_image_path.entryList(QStringList(filefilter),
@@ -110,15 +111,17 @@ void FaceRecognition::trainRecognizer()
 
     // Train the recognizer
     recognizer->train();
-    //if(recognizer->train())
-        // Training was successful
-    //else
-        // Training failed
+    if(recognizer->train())
+        emit newStatus("Training oke");
+    else
+        emit newStatus("Training FAILED");
 }
 
 
 void FaceRecognition::recognizeFace(const QImage& image)
 {
+    emit newStatus("Recognizing face");
+
     // Find the faces
     QList<QRect> faces_rects = face_detection.detectFace(image);
 
@@ -138,13 +141,18 @@ void FaceRecognition::recognizeFace(const QImage& image)
 
         // Convert to openCV image
         cv::Mat cvImage = ImageConversion::QImage2Mat(face);
+        cv::cvtColor(cvImage, cvImage, CV_BGR2GRAY);
         QString name = QString::fromStdString(recognizer->recognize(cvImage));
+        emit newStatus("Now trying to recognize a face.");
+        face.setText("application", APPLICATION);
+        face.setText("version", VERSION);
+        face.setText("label", name);
         emit recognizeFaceResult(face, name);
     }
 
     if(faces_rects.isEmpty())
     {
-        emit recognizeFaceFailed(image);
+        emit newStatus("No faces detected in the test image.");
         return;
     }
 
