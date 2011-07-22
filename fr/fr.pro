@@ -15,9 +15,7 @@ SOURCES += main.cpp \
         \
         recognition/facerecognition.cpp \
         recognition/facedetection.cpp \
-        \
-        \ # The following files are from an external resource, see the files for information
-        recognition/recognizer/eigenfacerecognizer.cpp
+        recognition/recognizer/eigenfacerecognizer.cpp  # The following files are from an external resource, see the files for information
 
 HEADERS  += \
         imageconversion.h \
@@ -25,10 +23,8 @@ HEADERS  += \
         \
         recognition/facerecognition.h \
         recognition/facedetection.h \
-        \
-        \ # The following files are from an external resource, see the files for information
-        recognition/recognizer/recognizer.h \
-        recognition/recognizer/eigenfacerecognizer.h
+        recognition/recognizer/recognizer.h \           # The following files are from an external resource, see the files for information
+        recognition/recognizer/eigenfacerecognizer.h    # The following files are from an external resource, see the files for information
 
 FORMS    += \
         gui/mainwindow.ui
