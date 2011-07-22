@@ -18,7 +18,7 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QPushButton" name="pushButton">
+       <widget class="QPushButton" name="buttonSelectTrainImages">
         <property name="text">
          <string>Select train img</string>
         </property>
@@ -38,7 +38,7 @@
        </spacer>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_4">
+       <widget class="QPushButton" name="buttonTrain">
         <property name="text">
          <string>Train</string>
         </property>
@@ -58,7 +58,7 @@
        </spacer>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_2">
+       <widget class="QPushButton" name="buttonSelectTestImage">
         <property name="text">
          <string>Select test img</string>
         </property>
@@ -85,7 +85,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="Button_set_label">
+         <widget class="QPushButton" name="buttonSetLabel">
           <property name="text">
            <string>Set label</string>
           </property>
@@ -123,7 +123,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton_3">
+         <widget class="QPushButton" name="buttonViewNextResult">
           <property name="text">
            <string>View next</string>
           </property>
@@ -148,7 +148,7 @@
      <x>0</x>
      <y>0</y>
      <width>400</width>
-     <height>29</height>
+     <height>23</height>
     </rect>
    </property>
   </widget>

@@ -21,6 +21,8 @@ public:
     static const QString VERSION;
     static const QString APPLICATION;
 
+    bool isTrained();
+
     void setFaceImageSize(QSize);
     void setTrainFolder(QString);
 

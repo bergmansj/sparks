@@ -28,17 +28,15 @@ signals:
     void labeledImage(const QImage&, const QString&);
 
 private slots:
-    void on_pushButton_clicked();
-    void on_pushButton_2_clicked();
-    void on_Button_set_label_clicked();
-
     void labelFace(const QImage&);
     void recognizeResult(const QImage&, const QString&);
     void statusUpdate(const QString&);
 
-    void on_pushButton_3_clicked();
-
-    void on_pushButton_4_clicked();
+    void on_buttonSelectTrainImages_clicked();
+    void on_buttonTrain_clicked();
+    void on_buttonSelectTestImage_clicked();
+    void on_buttonSetLabel_clicked();
+    void on_buttonViewNextResult_clicked();
 
 private:
     Ui::MainWindow *ui;
