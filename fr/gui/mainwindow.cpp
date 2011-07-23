@@ -25,7 +25,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::on_pushButton_clicked()
+void MainWindow::on_buttonSelectTrainImages_clicked()
 {
     const QStringList files =
         QFileDialog::getOpenFileNames(
@@ -42,8 +42,15 @@ void MainWindow::on_pushButton_clicked()
     }
 }
 
-void MainWindow::on_pushButton_2_clicked()
+
+void MainWindow::on_buttonTrain_clicked()
 {
+    fr.trainRecognizer();
+}
+
+void MainWindow::on_buttonSelectTestImage_clicked()
+{
+    if(fr.isTrained()) {
     QString path;
 
     path = QFileDialog::getOpenFileName(
@@ -56,24 +63,28 @@ void MainWindow::on_pushButton_2_clicked()
     QImage new_image(path);
     if(!new_image.isNull())
         emit recognizeNewFaces(new_image);
+    } else {
+        emit statusUpdate("ERROR: Classifier is not yet trained!");
+    }
 }
 
 void MainWindow::labelFace(const QImage& face)
 {
     unlabeled_images.append(face);
+    if(ui->TextLabel_unlabeled->text() == "empty")
+        on_buttonSetLabel_clicked();
 }
 
 
 void MainWindow::recognizeResult(const QImage& image, const QString& label)
 {
-    // show image, label
-    //ui->TextLabel_recognized->setPixmap(QPixmap::fromImage(image));
-    //ui->TextLabel_label->setText(label);
     emit newStatus("Added recognized image.");
     recognized_images.append(image);
+    if(ui->TextLabel_label->text() == "empty")
+        on_buttonViewNextResult_clicked();
 }
 
-void MainWindow::on_Button_set_label_clicked()
+void MainWindow::on_buttonSetLabel_clicked()
 {
     if(ui->TextLabel_unlabeled->text() == "empty") {
         if(unlabeled_images.size() > 0) {
@@ -98,14 +109,7 @@ void MainWindow::on_Button_set_label_clicked()
     }
 }
 
-
-void MainWindow::statusUpdate(const QString& status)
-{
-    ui->label_status->setText(status);
-    std::cout << status.toStdString() << std::endl;
-}
-
-void MainWindow::on_pushButton_3_clicked()
+void MainWindow::on_buttonViewNextResult_clicked()
 {
     if(!(ui->TextLabel_label->text() == "empty")) {
         recognized_images.removeFirst();
@@ -123,8 +127,8 @@ void MainWindow::on_pushButton_3_clicked()
     }
 }
 
-
-void MainWindow::on_pushButton_4_clicked()
+void MainWindow::statusUpdate(const QString& status)
 {
-    fr.trainRecognizer();
+    ui->label_status->setText(status);
+    std::cout << status.toStdString() << std::endl;
 }

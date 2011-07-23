@@ -38,6 +38,11 @@ void FaceRecognition::setTrainFolder(QString path)
     train_image_path.setPath(path);
 }
 
+bool FaceRecognition::isTrained()
+{
+    return recognizer->train();
+}
+
 void FaceRecognition::addTrainingImage(QImage image)
 {
     QList<QRect> faces_rects = face_detection.detectFace(image);
@@ -48,12 +53,14 @@ void FaceRecognition::addTrainingImage(QImage image)
     {
         QImage face = image.copy(face_rect).scaled(face_size,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
 
+        /*
         // Convert face to grayscale image
         face = face.convertToFormat( QImage::Format_Indexed8, Qt::AutoColor );
         for(int j = 0; j < 256; ++j) {
             int grayValue = qGray(face.color(j));
             face.setColor(j, qRgb(grayValue,grayValue,grayValue));
         }
+        */
 
         emit unlabeledFace(face);
     }
@@ -110,7 +117,6 @@ void FaceRecognition::trainRecognizer()
     }
 
     // Train the recognizer
-    recognizer->train();
     if(recognizer->train())
         emit newStatus("Training oke");
     else
@@ -132,12 +138,14 @@ void FaceRecognition::recognizeFace(const QImage& image)
     {
         QImage face = image.copy(face_rect).scaled(face_size,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
 
+        /*
         // Convert face to grayscale image
         face = face.convertToFormat( QImage::Format_Indexed8, Qt::AutoColor );
         for(int j = 0; j < 256; ++j) {
             int grayValue = qGray(face.color(j));
             face.setColor(j, qRgb(grayValue,grayValue,grayValue));
         }
+        */
 
         // Convert to openCV image
         cv::Mat cvImage = ImageConversion::QImage2Mat(face);
