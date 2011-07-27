@@ -20,8 +20,9 @@
 *.tar
 *.zip
 
-# Logs and databases #
-######################
+# Config files, Logs and databases #
+####################################
+*.conf
 *.log
 *.sql
 *.sqlite
