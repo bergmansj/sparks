@@ -14,6 +14,7 @@ from __future__ import with_statement
 
 import os
 import sys
+import csv
 import time
 import getopt
 import ConfigParser
@@ -89,9 +90,9 @@ class WifiScanner():
 			pass
 		self.t1_connection = sqlite.connect(sqlfile)
 		self.t1_cursor = self.t1_connection.cursor()
-		# Database local AIS table
+		# Database local WifiScan1 table
 		try:
-			self.t1_cursor.execute('CREATE TABLE Wifi (id INTEGER PRIMARY KEY, \
+			self.t1_cursor.execute('CREATE TABLE WifiScan1 (id INTEGER PRIMARY KEY, \
 								timestamp DATETIME, \
 								address VARCHAR(17), \
 								signal FLOAT, \
@@ -99,7 +100,44 @@ class WifiScanner():
 								active INTEGER)')
 			self.t1_connection.commit()
 		except sqlite.OperationalError:
-			self.log.info("WIFI_: Table 'Wifi' already exists")
+			self.log.info("WIFI_: Table 'WifiScan1' already exists")
+		# Database local WifiScan2AP table
+		try:
+			self.t1_cursor.execute('CREATE TABLE WifiScan2AP (id INTEGER PRIMARY KEY, \
+								bssid VARCHAR(20), \
+								firsttime DATETIME, \
+								lasttime DATETIME, \
+								channel INTEGER, \
+								speed FLOAT, \
+								privacy VARCHAR(20), \
+								cipher VARCHAR(20), \
+								Authentication VARCHAR(20), \
+								power FLOAT, \
+								beacons INTEGER, \
+								iv INTEGER, \
+								ipaddress VARCHAR(50), \
+								idlength INTEGER, \
+								essid VARCHAR(20), \
+								key VARCHAR(80), \
+								active INTEGER)')
+			self.t1_connection.commit()
+		except sqlite.OperationalError:
+			self.log.info("WIFI_: Table 'WifiScan2AP' already exists")
+		# Database local WifiScan2Client table
+		try:
+			self.t1_cursor.execute('CREATE TABLE WifiScan2Client (id INTEGER PRIMARY KEY, \
+								station_mac VARCHAR(20), \
+								firsttime DATETIME, \
+								lasttime DATETIME, \
+								power FLOAT, \
+								packets INTEGER, \
+								bssid VARCHAR(20), \
+								probed_essid VARCHAR(80), \
+								active INTEGER)')
+
+			self.t1_connection.commit()
+		except sqlite.OperationalError:
+			self.log.info("WIFI_: Table 'WifiScan2Client' already exists")
 
 		# Prepare wifi card
 		self.device = device_name
@@ -112,16 +150,19 @@ class WifiScanner():
 		self.t1_connection.close()
 		self.log.info("WIFI_: Time: %s", (round(time.time())))
 		self.log.info("WIFI_: WifiScanner is terminating")
+		if os.path.exists("./c_airdump-01.csv"):
+			os.remove("./c_airdump-01.csv")
 
 	def scanDelay(self, seconds) :
 		"""Sets the number of seconds between each scan."""
 		self.scan_delay = seconds
 
-	def scan(self):
+	def scan1(self):
 		"""Scans for Wifi devices and stores the outcomes."""
 		virtual_device = "mon0"
 		process = subprocess.Popen(["airbase-ng", "-Av", virtual_device], \
 			stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		self.log.info("WIFI_: airbase-ng service started")
 		while True:
 			outp = process.stdout.readline()
 			while outp != "":
@@ -147,7 +188,7 @@ class WifiScanner():
 						name = ""
 					
 					# Add measurement to db
-					self.t1_cursor.execute('INSERT INTO Wifi \
+					self.t1_cursor.execute('INSERT INTO WifiScan1 \
 										VALUES (null, ?, ?, ?, ?, ?)', \
 										(timestamp, address, signal, name, active))
 					self.log.info("WIFI_: address: %s",(address))
@@ -158,14 +199,86 @@ class WifiScanner():
 			
 			time.sleep(self.scan_delay)
 
+	def scan2(self):
+		"""Scans for Wifi devices and stores the outcomes."""
+		if os.path.exists("./c_airdump-01.csv"):
+			os.remove("./c_airdump-01.csv")
+			self.log.info("WIFI_: Old c_airdump-01.csv has been removed.")
+		virtual_device = "mon0"
+		process = subprocess.Popen(["airodump-ng", "--berlin", "30", "-w", "c_airdump", "--output-format", "csv", virtual_device], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		self.log.info("WIFI_: airodump-ng service started")
+
+		while True:
+			#outp = process.stderr.readline()
+			#if len(outp) > 0:
+			#	print 'ERROR:'
+			#	print outp
+			#outp = process.stdout.readline()
+			#if len(outp) > 0:
+			#	print 'OUTPUT:'
+			#	print outp
+			# Do something usefull
+			if os.path.exists("./c_airdump-01.csv"):
+				ifile = open("c_airdump-01.csv", "rb")
+				csvlines = csv.reader(ifile, delimiter=',')
+				d_index = 0
+				d_new = 0
+
+				d_list = []
+				for values in csvlines:
+					print values
+					if len(values) == 0:
+						d_new = 1
+						continue
+					if d_new == 1:
+						d_keys = values
+						d_index = d_index + 1
+						d_new = 0
+						continue
+					if len(values) < 15:
+						values = [values, '']
+					if d_index == 1:
+						# we have AP info (add to db)
+						self.t1_cursor.execute('INSERT INTO WifiScan2AP \
+							VALUES (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)', \
+							(values[0],  values[1],  values[2],  values[3],  values[4], \
+							 values[5],  values[6],  values[7],  values[8],  values[9], \
+							 values[10], values[11], values[12], values[13], values[14]))
+						self.t1_connection.commit()
+						self.log.info("WIFI_: BSSID: %s",(values[0]))
+						continue
+					if d_index == 2:
+						# we have client info (add to db)
+						self.t1_cursor.execute('INSERT INTO WifiScan2Client \
+							VALUES (null, ?, ?, ?, ?, ?, ?, ?, 0)', \
+							(values[0], values[1], values[2], values[3], \
+							 values[4], values[5], values[6]))
+						self.t1_connection.commit()
+						self.log.info("WIFI_: Station MAC: %s",(values[1]))
+								
+						continue
+					#d_list = [d_list, d_line]
+					#print d_index
+					#print d_line
+				# Close the file as quickly as possible
+				ifile.close()
+				#print d_list
+				###
+				print "--------------------------------------"
+			else:
+				print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+			time.sleep(self.scan_delay)
+
 def usage():
 	print "usage: wifiscanner.py [-h] [-c condif_file] [-i interface_name]"
-	print "                      [-d database_name] [-l log_file] [-s scan_delay]"
+	print "                           [-d database_name] [-m method]"
+	print "                           [-l log_file] [-s scan_delay]"
 	print ""
 	print "Arguments:"
 	print "	 {-h --help}"
 	print "	 {-c --configfile}    <path and filename of the configfile>"
 	print "	 {-i --interface}     <interface name of the wireless card>"
+	print "	 {-m --method}        <scan method (1=airbase-ng, 2=airodump-ng)>"
 	print "	 {-d --database}      <path and filename of the database>"
 	print "	 {-l --log}           <path and filename of the logfile>"
 	print "	 {-s --scan_delay}    <delay time (seconds) between scans>"
@@ -189,6 +302,7 @@ def main(argv):
 		sys.exit(2)
 
 	interface = ""
+	method = 0
 	config_file = "wifi.conf"
 	database = ""
 	log = ""
@@ -200,6 +314,8 @@ def main(argv):
 			sys.exit()
 		elif opt in ("-i", "--interface"):
 			interface = arg
+		elif opt in ("-m", "--method"):
+			method = arg
 		elif opt in ("-d", "--database"):
 			database = arg
 		elif opt in ("-l", "--log"):
@@ -217,6 +333,8 @@ def main(argv):
 	config = ConfigParser.ConfigParser()
 	if len(config.read(config_file)) != 0:
 		if config.has_section('Wifi') == True:
+			if method == 0:
+				method = config.get('Wifi', 'Method')
 			if database == "":
 				database = config.get('Wifi', 'Database')
 			if log == "":
@@ -226,13 +344,16 @@ def main(argv):
 			setConf = False
 		
 	if setConf == True:
+		if method == "":
+			method = 1
 		if database == "":
 			database = "wifi.sqlite"
 		if log == "":
 			log = "wifi.log"
 		if scan_delay == -1:
-			scan_delay = 3
+			scan_delay = 1
 		config.add_section('Wifi')
+		config.set('Wifi', 'Method', method)
 		config.set('Wifi', 'Database', database)
 		config.set('Wifi', 'Log', log)
 		config.set('Wifi', 'Scan_delay', scan_delay)
@@ -241,7 +362,10 @@ def main(argv):
 
 	x = WifiScanner(interface, database, log)
 	x.scanDelay(float(scan_delay))
-	x.scan()
+	if method == 1:
+		x.scan()
+	if method == 2:
+		x.scan2()
 
 if __name__=='__main__' :
 	main(sys.argv[1:])
